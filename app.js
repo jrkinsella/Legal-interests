@@ -589,13 +589,12 @@ function startNextRound() {
 
 function pickWeightedScenarios(count, drillType) {
   let pool = [...SCENARIOS];
+
   // For courtroom, prefer scenarios with interesting RAP analysis
   if (drillType === 'courtroom') {
-    // Ensure mix of valid and invalid
     const invalid = pool.filter(s => !s.rapValid);
     const valid = pool.filter(s => s.rapValid);
     const picked = [];
-    // Pick ~4 invalid, ~6 valid (or whatever is available)
     shuffle(invalid); shuffle(valid);
     picked.push(...invalid.slice(0, Math.min(4, invalid.length)));
     picked.push(...valid.slice(0, count - picked.length));
@@ -603,36 +602,50 @@ function pickWeightedScenarios(count, drillType) {
     return picked.slice(0, count);
   }
 
-  // Weight by weakness
+  // Build a list of (scenario, partyIndex) pairs — one per possible question
   const stats = getTermStats();
+  let candidates = [];
   pool.forEach(s => {
-    let weight = 1;
-    s.parties.forEach(p => {
+    s.parties.forEach((p, pi) => {
+      let weight = 1;
       const t = stats[p.interest];
       if (t && t.total > 0) {
         const accuracy = t.correct / t.total;
-        weight += (1 - accuracy) * 2; // weaker terms get higher weight
+        weight += (1 - accuracy) * 3;
       } else {
-        weight += 1.5; // untested terms get moderate boost
+        weight += 2;
       }
+      candidates.push({ scenario: s, partyIndex: pi, term: p.interest, weight });
     });
-    s._weight = weight;
   });
 
-  // Weighted random selection
+  // Pick questions ensuring no term appears more than twice
   const picked = [];
-  const available = [...pool];
-  for (let i = 0; i < count && available.length > 0; i++) {
-    const totalWeight = available.reduce((s, sc) => s + sc._weight, 0);
+  const termCount = {};
+
+  for (let i = 0; i < count && candidates.length > 0; i++) {
+    // Filter out candidates whose term already hit the cap
+    let eligible = candidates.filter(c => (termCount[c.term] || 0) < 2);
+    if (eligible.length === 0) eligible = candidates; // fallback
+
+    const totalWeight = eligible.reduce((s, c) => s + c.weight, 0);
     let r = Math.random() * totalWeight;
-    let idx = 0;
-    for (let j = 0; j < available.length; j++) {
-      r -= available[j]._weight;
-      if (r <= 0) { idx = j; break; }
+    let chosen = eligible[0];
+    for (const c of eligible) {
+      r -= c.weight;
+      if (r <= 0) { chosen = c; break; }
     }
-    picked.push(available.splice(idx, 1)[0]);
+
+    // Add to picked, tag the scenario with the pre-assigned party
+    const taggedScenario = Object.assign({}, chosen.scenario, { _assignedPartyIndex: chosen.partyIndex });
+    picked.push(taggedScenario);
+    termCount[chosen.term] = (termCount[chosen.term] || 0) + 1;
+
+    // Remove all candidates from this same scenario so we don't repeat it
+    candidates = candidates.filter(c => c.scenario.id !== chosen.scenario.id);
   }
-  return picked;
+
+  return shuffle(picked);
 }
 
 function shuffle(arr) {
@@ -698,6 +711,17 @@ function updateQuestionUI() {
 }
 
 // ============================================================
+// HELPER: Get the pre-assigned party for a scenario (term-diversity enforced)
+// Falls back to random if no assignment exists (e.g. courtroom drill)
+// ============================================================
+function getAssignedParty(scenario) {
+  if (scenario._assignedPartyIndex !== undefined && scenario.parties[scenario._assignedPartyIndex]) {
+    return scenario.parties[scenario._assignedPartyIndex];
+  }
+  return scenario.parties[Math.floor(Math.random() * scenario.parties.length)];
+}
+
+// ============================================================
 // RENDER QUESTION — dispatches to drill type
 // ============================================================
 function renderQuestion() {
@@ -728,8 +752,7 @@ function renderQuestion() {
 // DRILL 1: SCENARIO CLASSIFIER (Multiple Choice)
 // ============================================================
 function renderClassifier(scenario, container) {
-  // Pick a random party from the scenario to ask about
-  const party = scenario.parties[Math.floor(Math.random() * scenario.parties.length)];
+  const party = getAssignedParty(scenario);
   state._classifierAnswer = party.interest;
   state._classifierParty = party;
   state._classifierScenario = scenario;
@@ -798,7 +821,7 @@ function renderMatcher(container) {
 
   // For each scenario, pick one party to ask about
   const items = batch.map(s => {
-    const party = s.parties[Math.floor(Math.random() * s.parties.length)];
+    const party = getAssignedParty(s);
     return { scenario: s, party, correctAnswer: party.interest };
   });
 
@@ -1113,7 +1136,7 @@ function fuzzyConveyanceMatch(built, correct, scenario) {
 // DRILL 4: CASCADING REVEAL (Self-Graded Recall)
 // ============================================================
 function renderSpotlight(scenario, container) {
-  const party = scenario.parties[Math.floor(Math.random() * scenario.parties.length)];
+  const party = getAssignedParty(scenario);
   state._spotlightAnswer = party.interest;
   state._spotlightParty = party;
   state._spotlightScenario = scenario;
