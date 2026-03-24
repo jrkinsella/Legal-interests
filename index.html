@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Legal Interests Drill — Amber Tutors Law</title>
+<style>
+:root {
+  --sage: #7a9e7e;
+  --sage-light: #e8f0e9;
+  --sage-dark: #5a7e5e;
+  --cream: #faf8f5;
+  --warm-white: #ffffff;
+  --charcoal: #2d2d2d;
+  --charcoal-light: #555;
+  --gold: #c9a84c;
+  --gold-light: #f5ecd4;
+  --red-soft: #d9534f;
+  --red-bg: #fdecea;
+  --green-soft: #5cb85c;
+  --green-bg: #eaf6ea;
+  --blue-soft: #5bc0de;
+  --blue-bg: #e8f4f8;
+  --border: #e0dcd5;
+  --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --radius: 12px;
+  --font-serif: Georgia, 'Times New Roman', serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--cream);
+  color: var(--charcoal);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header */
+.app-header {
+  text-align: center;
+  padding: 30px 20px 20px;
+  border-bottom: 2px solid var(--sage-light);
+  margin-bottom: 30px;
+}
+.app-header h1 {
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  color: var(--sage-dark);
+  margin-bottom: 6px;
+}
+.app-header p {
+  color: var(--charcoal-light);
+  font-size: 0.95rem;
+}
+.app-header .brand {
+  font-size: 0.8rem;
+  color: var(--sage);
+  margin-top: 4px;
+}
+
+/* Screens */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* Cards */
+.card {
+  background: var(--warm-white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+  margin-bottom: 20px;
+  border: 1px solid var(--border);
+}
+
+/* Buttons */
+.btn {
+  display: inline-block;
+  padding: 12px 28px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+.btn-primary {
+  background: var(--sage);
+  color: white;
+}
+.btn-primary:hover { background: var(--sage-dark); }
+.btn-secondary {
+  background: var(--warm-white);
+  color: var(--sage-dark);
+  border: 2px solid var(--sage);
+}
+.btn-secondary:hover { background: var(--sage-light); }
+.btn-gold {
+  background: var(--gold);
+  color: white;
+}
+.btn-gold:hover { background: #b8943f; }
+.btn-small {
+  padding: 8px 18px;
+  font-size: 0.9rem;
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Conveyance display */
+.conveyance-display {
+  font-family: var(--font-serif);
+  font-size: 1.25rem;
+  color: var(--sage-dark);
+  background: var(--sage-light);
+  padding: 18px 24px;
+  border-radius: 8px;
+  margin: 16px 0;
+  text-align: center;
+  border-left: 4px solid var(--sage);
+}
+
+/* Multiple choice */
+.mc-options { list-style: none; margin: 16px 0; }
+.mc-options li {
+  padding: 12px 18px;
+  margin: 8px 0;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.95rem;
+}
+.mc-options li:hover { border-color: var(--sage); background: var(--sage-light); }
+.mc-options li.selected { border-color: var(--sage); background: var(--sage-light); font-weight: 600; }
+.mc-options li.correct { border-color: var(--green-soft); background: var(--green-bg); }
+.mc-options li.incorrect { border-color: var(--red-soft); background: var(--red-bg); }
+.mc-options li.disabled { pointer-events: none; }
+
+/* Feedback */
+.feedback {
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin: 16px 0;
+  font-size: 0.93rem;
+  line-height: 1.5;
+  display: none;
+}
+.feedback.show { display: block; }
+.feedback.correct { background: var(--green-bg); border-left: 4px solid var(--green-soft); }
+.feedback.incorrect { background: var(--red-bg); border-left: 4px solid var(--red-soft); }
+.feedback.info { background: var(--blue-bg); border-left: 4px solid var(--blue-soft); }
+
+/* Progress bar */
+.progress-bar-container {
+  background: var(--sage-light);
+  border-radius: 20px;
+  height: 10px;
+  margin: 16px 0;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  background: var(--sage);
+  height: 100%;
+  border-radius: 20px;
+  transition: width 0.4s ease;
+}
+
+/* Drill info bar */
+.drill-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--charcoal-light);
+  margin-bottom: 8px;
+}
+
+/* Question label */
+.question-label {
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 8px;
+  color: var(--charcoal);
+}
+
+/* Drag and drop */
+.drag-zone {
+  min-height: 60px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  transition: border-color 0.2s;
+}
+.drag-zone.over { border-color: var(--sage); background: var(--sage-light); }
+.drag-item {
+  display: inline-block;
+  padding: 8px 16px;
+  background: var(--sage);
+  color: white;
+  border-radius: 6px;
+  cursor: grab;
+  font-size: 0.9rem;
+  user-select: none;
+  transition: transform 0.15s;
+}
+.drag-item:active { cursor: grabbing; transform: scale(1.05); }
+.drag-item.placed { background: var(--charcoal-light); }
+
+/* Build blocks */
+.block-pool {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+.block-item {
+  padding: 8px 14px;
+  background: var(--warm-white);
+  border: 2px solid var(--sage);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+.block-item:hover { background: var(--sage-light); }
+.block-item.used { opacity: 0.4; pointer-events: none; }
+.build-area {
+  min-height: 50px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  margin: 12px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.build-area .block-item {
+  background: var(--sage-light);
+  border-color: var(--sage-dark);
+  cursor: pointer;
+}
+
+/* Typed input */
+.typed-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: var(--font-sans);
+  transition: border-color 0.2s;
+}
+.typed-input:focus { outline: none; border-color: var(--sage); }
+.autocomplete-list {
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: 0 0 8px 8px;
+  max-height: 180px;
+  overflow-y: auto;
+  background: white;
+  margin-top: -2px;
+}
+.autocomplete-list li {
+  padding: 10px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.autocomplete-list li:hover { background: var(--sage-light); }
+.autocomplete-list li.highlighted { background: var(--sage-light); }
+
+/* Timer */
+.timer-display {
+  font-size: 0.9rem;
+  color: var(--gold);
+  font-weight: 600;
+}
+
+/* RAP courtroom */
+.ruling-options {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+}
+.ruling-btn {
+  flex: 1;
+  padding: 14px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--warm-white);
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  transition: all 0.2s;
+}
+.ruling-btn:hover { border-color: var(--sage); }
+.ruling-btn.selected { border-color: var(--sage); background: var(--sage-light); }
+.ruling-btn.correct-ruling { border-color: var(--green-soft); background: var(--green-bg); }
+.ruling-btn.incorrect-ruling { border-color: var(--red-soft); background: var(--red-bg); }
+
+/* Report */
+.report-section { margin: 20px 0; }
+.report-section h3 {
+  font-family: var(--font-serif);
+  color: var(--sage-dark);
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.stat-card {
+  background: var(--sage-light);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+.stat-card .stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--sage-dark);
+}
+.stat-card .stat-label {
+  font-size: 0.8rem;
+  color: var(--charcoal-light);
+  margin-top: 4px;
+}
+.term-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.term-row:last-child { border-bottom: none; }
+.term-bar {
+  width: 100px;
+  height: 8px;
+  background: var(--sage-light);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-left: 12px;
+}
+.term-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s;
+}
+.strength { color: var(--green-soft); font-weight: 600; }
+.weakness { color: var(--red-soft); font-weight: 600; }
+
+/* Drill type selector */
+.drill-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 16px 0;
+}
+.drill-option {
+  padding: 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+.drill-option:hover { border-color: var(--sage); background: var(--sage-light); }
+.drill-option.selected { border-color: var(--sage); background: var(--sage-light); }
+.drill-option .drill-icon { font-size: 1.5rem; margin-bottom: 6px; }
+.drill-option .drill-name { font-weight: 600; font-size: 0.95rem; }
+.drill-option .drill-desc { font-size: 0.8rem; color: var(--charcoal-light); margin-top: 4px; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container { padding: 12px; }
+  .app-header h1 { font-size: 1.4rem; }
+  .card { padding: 18px; }
+  .drill-selector { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .ruling-options { flex-direction: column; }
+  .conveyance-display { font-size: 1.1rem; padding: 14px 18px; }
+}
+
+/* Transition helper */
+.fade-in { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Match pairs for drag-drop */
+.match-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+.match-label {
+  flex: 1;
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  color: var(--sage-dark);
+  background: var(--sage-light);
+  padding: 10px 14px;
+  border-radius: 6px;
+  border-left: 3px solid var(--sage);
+}
+.match-drop {
+  flex: 1;
+  min-height: 44px;
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+.match-drop.over { border-color: var(--sage); background: var(--sage-light); }
+.match-drop.filled { border-style: solid; border-color: var(--sage); }
+.match-drop .drag-item { margin: 0; }
+
+/* Utility */
+.text-center { text-align: center; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+.mb-12 { margin-bottom: 12px; }
+.gap-8 { gap: 8px; }
+.flex-center { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="app-header">
+  <h1>Legal Interests Drill</h1>
+  <p>Master property law conveyances through active practice</p>
+  <div class="brand">Amber Tutors Law</div>
+</header>
+
+<!-- WELCOME SCREEN -->
+<div id="screen-welcome" class="screen active">
+  <div class="card">
+    <h2 style="font-family:var(--font-serif);color:var(--sage-dark);margin-bottom:12px;">Welcome</h2>
+    <p style="margin-bottom:16px;">This interactive drill will test your understanding of legal interests in property conveyances — present interests, future interests, and the Rule Against Perpetuities.</p>
+    <p style="margin-bottom:16px;">Each session has <strong>3 rounds of 10 questions</strong> using different drill formats. You can let the tool pick your drills or choose them yourself.</p>
+    <p style="margin-bottom:20px;font-size:0.9rem;color:var(--charcoal-light);">Your progress is saved in your browser between sessions.</p>
+    <div class="flex-center">
+      <button class="btn btn-primary" onclick="showScreen('screen-setup')">Start a Session</button>
+      <button class="btn btn-secondary" onclick="showPastReport()">View Past Report</button>
+    </div>
+  </div>
+  <div class="card" id="streak-card" style="display:none;">
+    <div style="text-align:center;">
+      <span style="font-size:1.5rem;">🔥</span>
+      <span id="streak-text" style="font-weight:600;color:var(--gold);"></span>
+    </div>
+  </div>
+</div>
+
+<!-- SETUP SCREEN -->
+<div id="screen-setup" class="screen">
+  <div class="card">
+    <h2 style="font-family:var(--font-serif);color:var(--sage-dark);margin-bottom:12px;">Choose Your Drills</h2>
+    <p style="margin-bottom:16px;">Select 3 drill types for this session, or let us pick for you.</p>
+    <div class="drill-selector" id="drill-selector">
+      <div class="drill-option" data-drill="classifier" onclick="toggleDrill(this)">
+        <div class="drill-icon">📋</div>
+        <div class="drill-name">Scenario Classifier</div>
+        <div class="drill-desc">Multiple choice — identify each party's interest</div>
+      </div>
+      <div class="drill-option" data-drill="matcher" onclick="toggleDrill(this)">
+        <div class="drill-icon">🔗</div>
+        <div class="drill-name">Term Matcher</div>
+        <div class="drill-desc">Drag and drop — match conveyances to interests</div>
+      </div>
+      <div class="drill-option" data-drill="builder" onclick="toggleDrill(this)">
+        <div class="drill-icon">🏗️</div>
+        <div class="drill-name">Build the Conveyance</div>
+        <div class="drill-desc">Reverse engineer — assemble a conveyance from parts</div>
+      </div>
+      <div class="drill-option" data-drill="spotlight" onclick="toggleDrill(this)">
+        <div class="drill-icon">💡</div>
+        <div class="drill-name">Spotlight Recall</div>
+        <div class="drill-desc">Type the answer — pure recall with autocomplete</div>
+      </div>
+      <div class="drill-option" data-drill="courtroom" onclick="toggleDrill(this)">
+        <div class="drill-icon">⚖️</div>
+        <div class="drill-name">RAP Courtroom</div>
+        <div class="drill-desc">Rule on validity under the Rule Against Perpetuities</div>
+      </div>
+    </div>
+    <div class="flex-center mt-16">
+      <button class="btn btn-primary" id="btn-start-session" onclick="startSession()">Start with Selected (0/3)</button>
+      <button class="btn btn-secondary" onclick="randomizeDrills()">Surprise Me</button>
+    </div>
+  </div>
+</div>
+
+<!-- DRILL SCREEN -->
+<div id="screen-drill" class="screen">
+  <div class="drill-info">
+    <span id="drill-round-label">Round 1 of 3</span>
+    <span id="drill-type-label">Scenario Classifier</span>
+    <span class="timer-display" id="drill-timer">0:00</span>
+  </div>
+  <div class="progress-bar-container">
+    <div class="progress-bar-fill" id="drill-progress" style="width:0%"></div>
+  </div>
+  <div class="drill-info">
+    <span id="drill-q-label">Question 1 of 10</span>
+    <span id="drill-score-label">Score: 0/0</span>
+  </div>
+  <div id="drill-content" class="card fade-in"></div>
+  <div id="drill-feedback" class="feedback"></div>
+  <div class="flex-center mt-12">
+    <button class="btn btn-primary" id="btn-next" onclick="nextQuestion()" style="display:none;">Next →</button>
+    <button class="btn btn-primary" id="btn-submit-drill" onclick="submitDrillAnswer()" style="display:none;">Submit</button>
+  </div>
+</div>
+
+<!-- ROUND BREAK SCREEN -->
+<div id="screen-break" class="screen">
+  <div class="card text-center">
+    <h2 style="font-family:var(--font-serif);color:var(--sage-dark);margin-bottom:12px;" id="break-title">Round Complete</h2>
+    <p id="break-summary"></p>
+    <div class="mt-20">
+      <button class="btn btn-primary" onclick="startNextRound()">Next Round →</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPORT SCREEN -->
+<div id="screen-report" class="screen">
+  <div class="card">
+    <h2 style="font-family:var(--font-serif);color:var(--sage-dark);margin-bottom:16px;">Session Report</h2>
+    <div class="stat-grid" id="report-stats"></div>
+  </div>
+  <div class="card">
+    <h3 style="font-family:var(--font-serif);color:var(--sage-dark);margin-bottom:10px;">Performance by Concept</h3>
+    <div id="report-concepts"></div>
+  </div>
+  <div class="card">
+    <h3 style="font-family:var(--font-serif);color:var(--sage-dark);margin-bottom:10px;">Performance by Drill Type</h3>
+    <div id="report-drills"></div>
+  </div>
+  <div class="card">
+    <h3 style="font-family:var(--font-serif);color:var(--sage-dark);margin-bottom:10px;">Recommendations</h3>
+    <div id="report-recs"></div>
+  </div>
+  <div class="flex-center mt-16">
+    <button class="btn btn-primary" onclick="downloadReport()">Download Report</button>
+    <button class="btn btn-secondary" onclick="showScreen('screen-welcome')">Back to Home</button>
+  </div>
+</div>
+
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
