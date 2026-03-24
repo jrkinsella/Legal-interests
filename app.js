@@ -1122,10 +1122,13 @@ function renderSpotlight(scenario, container) {
   const typeLabel = party.type === 'present' ? 'present interest' : 'future interest';
 
   container.innerHTML = `
-    <div class="question-label">Think: What ${typeLabel} does ${party.name} have?</div>
+    <div class="question-label">What ${typeLabel} does ${party.name} have?</div>
     <div class="conveyance-display">${scenario.conveyance}</div>
-    <div style="text-align:center;margin:20px 0;">
-      <p style="color:var(--charcoal-light);font-size:0.9rem;margin-bottom:12px;">Commit to your answer in your mind, then reveal.</p>
+    <div style="margin:16px 0;">
+      <p style="color:var(--charcoal-light);font-size:0.9rem;margin-bottom:8px;">Write your answer, then reveal to check.</p>
+      <input type="text" class="typed-input" id="spotlight-commit" placeholder="Type your answer here first..." autocomplete="off">
+    </div>
+    <div style="text-align:center;margin:12px 0;">
       <button class="btn btn-gold" id="btn-reveal" onclick="revealSpotlight()">Reveal Answer</button>
     </div>
     <div id="spotlight-answer" style="display:none;">
@@ -1147,7 +1150,17 @@ function renderSpotlight(scenario, container) {
 }
 
 function revealSpotlight() {
+  const input = document.getElementById('spotlight-commit');
+  if (!input.value.trim()) {
+    input.style.borderColor = 'var(--red-soft)';
+    input.placeholder = 'Type something first — even a guess!';
+    return;
+  }
   state._spotlightRevealed = true;
+  input.readOnly = true;
+  input.style.background = 'var(--sage-light)';
+  input.style.borderColor = 'var(--sage)';
+  input.style.color = 'var(--charcoal)';
   document.getElementById('btn-reveal').style.display = 'none';
   document.getElementById('spotlight-answer').style.display = 'block';
 }
