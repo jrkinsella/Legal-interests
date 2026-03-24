@@ -439,6 +439,31 @@ body {
 .match-drop.filled { border-style: solid; border-color: var(--sage); }
 .match-drop .drag-item { margin: 0; }
 
+/* Self-grade buttons (Cascading Reveal) */
+.self-grade-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.grade-btn {
+  padding: 10px 20px;
+  border: 2px solid var(--border);
+  border-radius: 8px;
+  background: var(--warm-white);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+.grade-btn:hover { border-color: var(--sage); }
+.grade-knew { color: var(--green-soft); }
+.grade-knew:hover { background: var(--green-bg); border-color: var(--green-soft); }
+.grade-close { color: var(--gold); }
+.grade-close:hover { background: var(--gold-light); border-color: var(--gold); }
+.grade-missed { color: var(--red-soft); }
+.grade-missed:hover { background: var(--red-bg); border-color: var(--red-soft); }
+
 /* Utility */
 .text-center { text-align: center; }
 .mt-12 { margin-top: 12px; }
@@ -501,8 +526,8 @@ body {
       </div>
       <div class="drill-option" data-drill="spotlight" onclick="toggleDrill(this)">
         <div class="drill-icon">💡</div>
-        <div class="drill-name">Spotlight Recall</div>
-        <div class="drill-desc">Type the answer — pure recall with autocomplete</div>
+        <div class="drill-name">Cascading Reveal</div>
+        <div class="drill-desc">Self-graded recall — commit to an answer, then reveal</div>
       </div>
       <div class="drill-option" data-drill="courtroom" onclick="toggleDrill(this)">
         <div class="drill-icon">⚖️</div>

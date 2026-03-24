@@ -670,7 +670,7 @@ function updateDrillUI() {
     classifier: '📋 Scenario Classifier',
     matcher: '🔗 Term Matcher',
     builder: '🏗️ Build the Conveyance',
-    spotlight: '💡 Spotlight Recall',
+    spotlight: '💡 Cascading Reveal',
     courtroom: '⚖️ RAP Courtroom'
   };
   const drillType = state.selectedDrills[state.currentRound];
@@ -1110,107 +1110,92 @@ function fuzzyConveyanceMatch(built, correct, scenario) {
 }
 
 // ============================================================
-// DRILL 4: SPOTLIGHT RECALL (Typed Input)
+// DRILL 4: CASCADING REVEAL (Self-Graded Recall)
 // ============================================================
 function renderSpotlight(scenario, container) {
   const party = scenario.parties[Math.floor(Math.random() * scenario.parties.length)];
   state._spotlightAnswer = party.interest;
   state._spotlightParty = party;
   state._spotlightScenario = scenario;
+  state._spotlightRevealed = false;
 
   const typeLabel = party.type === 'present' ? 'present interest' : 'future interest';
 
   container.innerHTML = `
-    <div class="question-label">Type the ${typeLabel} that ${party.name} has:</div>
+    <div class="question-label">Think: What ${typeLabel} does ${party.name} have?</div>
     <div class="conveyance-display">${scenario.conveyance}</div>
-    <div style="position:relative;">
-      <input type="text" class="typed-input" id="spotlight-input" placeholder="Start typing..."
-        oninput="spotlightAutocomplete(this.value)" onkeydown="spotlightKeydown(event)" autocomplete="off">
-      <ul class="autocomplete-list" id="spotlight-ac" style="display:none;"></ul>
+    <div style="text-align:center;margin:20px 0;">
+      <p style="color:var(--charcoal-light);font-size:0.9rem;margin-bottom:12px;">Commit to your answer in your mind, then reveal.</p>
+      <button class="btn btn-gold" id="btn-reveal" onclick="revealSpotlight()">Reveal Answer</button>
+    </div>
+    <div id="spotlight-answer" style="display:none;">
+      <div style="background:var(--gold-light);padding:18px 22px;border-radius:8px;border-left:4px solid var(--gold);margin:16px 0;">
+        <div style="font-size:1.15rem;font-weight:700;color:var(--sage-dark);margin-bottom:6px;">${capitalize(party.interest)}</div>
+        <div style="font-size:0.93rem;color:var(--charcoal);">${TERMS[party.interest].definition}</div>
+      </div>
+      <p style="text-align:center;font-weight:600;margin:16px 0 8px;">How did you do?</p>
+      <div class="self-grade-options" id="self-grade-options">
+        <button class="grade-btn grade-knew" onclick="gradeSpotlight('knew')">😊 I knew it</button>
+        <button class="grade-btn grade-close" onclick="gradeSpotlight('close')">🤔 I was close</button>
+        <button class="grade-btn grade-missed" onclick="gradeSpotlight('missed')">😬 I didn't know</button>
+      </div>
     </div>
   `;
-  document.getElementById('btn-submit-drill').style.display = 'inline-block';
-  setTimeout(() => document.getElementById('spotlight-input').focus(), 100);
+  // Hide submit and next — this drill uses its own flow
+  document.getElementById('btn-submit-drill').style.display = 'none';
+  document.getElementById('btn-next').style.display = 'none';
 }
 
-function spotlightAutocomplete(val) {
-  const list = document.getElementById('spotlight-ac');
-  if (val.length < 2) { list.style.display = 'none'; return; }
-
-  const matches = ALL_INTEREST_NAMES.filter(n => n.toLowerCase().includes(val.toLowerCase()));
-  if (matches.length === 0) { list.style.display = 'none'; return; }
-
-  state._spotlightACIndex = -1;
-  list.innerHTML = matches.map((m, i) => `<li onclick="spotlightSelect(this)" data-value="${escapeAttr(m)}" data-idx="${i}">${capitalize(m)}</li>`).join('');
-  list.style.display = 'block';
+function revealSpotlight() {
+  state._spotlightRevealed = true;
+  document.getElementById('btn-reveal').style.display = 'none';
+  document.getElementById('spotlight-answer').style.display = 'block';
 }
 
-function spotlightKeydown(e) {
-  const list = document.getElementById('spotlight-ac');
-  const items = list.querySelectorAll('li');
-  if (items.length === 0) {
-    if (e.key === 'Enter') submitDrillAnswer();
-    return;
-  }
-
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    state._spotlightACIndex = Math.min((state._spotlightACIndex || -1) + 1, items.length - 1);
-    items.forEach((li, i) => li.classList.toggle('highlighted', i === state._spotlightACIndex));
-  } else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    state._spotlightACIndex = Math.max((state._spotlightACIndex || 0) - 1, 0);
-    items.forEach((li, i) => li.classList.toggle('highlighted', i === state._spotlightACIndex));
-  } else if (e.key === 'Enter') {
-    e.preventDefault();
-    if (state._spotlightACIndex >= 0 && items[state._spotlightACIndex]) {
-      const val = items[state._spotlightACIndex].dataset.value;
-      spotlightSelect(val);
-    } else {
-      submitDrillAnswer();
-    }
-  }
-}
-
-function spotlightSelect(elOrVal) {
-  const val = typeof elOrVal === 'string' ? elOrVal : elOrVal.dataset.value;
-  document.getElementById('spotlight-input').value = capitalize(val);
-  document.getElementById('spotlight-ac').style.display = 'none';
-}
-
-function submitSpotlight() {
-  const input = document.getElementById('spotlight-input').value.trim().toLowerCase();
-  if (!input) return;
+function gradeSpotlight(grade) {
   state.answered = true;
   const timeMs = Date.now() - state.questionStartTime;
+  const correct = grade === 'knew';
+  const partial = grade === 'close';
 
-  // Fuzzy match
-  const correct = fuzzyTermMatch(input, state._spotlightAnswer);
+  // Disable grade buttons
+  document.querySelectorAll('#self-grade-options .grade-btn').forEach(b => {
+    b.disabled = true;
+    b.style.opacity = '0.5';
+  });
+  // Highlight selected
+  const selectedBtn = document.querySelector(`#self-grade-options .grade-${grade === 'knew' ? 'knew' : grade === 'close' ? 'close' : 'missed'}`);
+  if (selectedBtn) {
+    selectedBtn.style.opacity = '1';
+    selectedBtn.style.outline = '3px solid var(--sage-dark)';
+  }
 
-  const term = TERMS[state._spotlightAnswer];
+  // Show feedback
   const fb = document.getElementById('drill-feedback');
-  fb.className = `feedback show ${correct ? 'correct' : 'incorrect'}`;
   fb.style.display = 'block';
-  fb.innerHTML = correct
-    ? `<strong>Correct!</strong> ${capitalize(state._spotlightAnswer)}: ${term.definition}`
-    : `<strong>Not quite.</strong> You typed "${capitalize(input)}." The correct answer is <strong>${capitalize(state._spotlightAnswer)}</strong>. ${term.definition}`;
+  if (correct) {
+    fb.className = 'feedback show correct';
+    fb.innerHTML = '<strong>Nice recall!</strong> Keep it up — this one is solid in your memory.';
+  } else if (partial) {
+    fb.className = 'feedback show info';
+    fb.innerHTML = `<strong>Almost there.</strong> You're building the right connections. Review the definition above and you'll lock it in.`;
+    // Partial credit: record as incorrect but with lighter weight for adaptive system
+    updateTermStats(state._spotlightAnswer, false);
+  } else {
+    fb.className = 'feedback show incorrect';
+    fb.innerHTML = `<strong>That's okay — this is how learning works.</strong> Read the definition carefully. You'll see this one again soon.`;
+  }
 
-  recordResult(state._spotlightScenario, 'spotlight', state._spotlightParty.name, correct, input, state._spotlightAnswer, timeMs, state._spotlightAnswer);
-  document.getElementById('btn-submit-drill').style.display = 'none';
+  recordResult(
+    state._spotlightScenario, 'spotlight', state._spotlightParty.name,
+    correct, `self-grade:${grade}`, state._spotlightAnswer, timeMs, state._spotlightAnswer
+  );
+
   document.getElementById('btn-next').style.display = 'inline-block';
 }
 
-function fuzzyTermMatch(input, answer) {
-  const a = input.toLowerCase().trim();
-  const b = answer.toLowerCase().trim();
-  if (a === b) return true;
-  // Allow minor variations
-  if (a.replace(/\s+/g, ' ') === b.replace(/\s+/g, ' ')) return true;
-  // Check if they typed the key words
-  const aWords = a.split(/\s+/);
-  const bWords = b.split(/\s+/);
-  const matchCount = bWords.filter(w => aWords.includes(w)).length;
-  return matchCount >= bWords.length * 0.8;
+function submitSpotlight() {
+  // No-op — cascading reveal uses its own grading flow
 }
 
 // ============================================================
@@ -1504,7 +1489,7 @@ function renderReport(report) {
   }).join('');
 
   // Drills
-  const drillNames = { classifier: 'Scenario Classifier', matcher: 'Term Matcher', builder: 'Build the Conveyance', spotlight: 'Spotlight Recall', courtroom: 'RAP Courtroom' };
+  const drillNames = { classifier: 'Scenario Classifier', matcher: 'Term Matcher', builder: 'Build the Conveyance', spotlight: 'Cascading Reveal', courtroom: 'RAP Courtroom' };
   const drillsEl = document.getElementById('report-drills');
   drillsEl.innerHTML = Object.entries(report.drillBreakdown).map(([drill, data]) => {
     const pct = Math.round((data.correct / data.total) * 100);
@@ -1559,7 +1544,7 @@ function downloadReport() {
   const report = state._lastReport;
   if (!report) return;
 
-  const drillNames = { classifier: 'Scenario Classifier', matcher: 'Term Matcher', builder: 'Build the Conveyance', spotlight: 'Spotlight Recall', courtroom: 'RAP Courtroom' };
+  const drillNames = { classifier: 'Scenario Classifier', matcher: 'Term Matcher', builder: 'Build the Conveyance', spotlight: 'Cascading Reveal', courtroom: 'RAP Courtroom' };
   const date = new Date(report.date).toLocaleDateString();
 
   let html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Legal Interests Drill Report — ${date}</title>
