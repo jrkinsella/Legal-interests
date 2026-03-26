@@ -404,6 +404,74 @@ body {
 }
 
 /* Transition helper */
+/* Modal overlay */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 1000;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+.modal-overlay.open {
+  display: flex;
+}
+.modal-box {
+  background: var(--warm-white);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  max-width: 620px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding: 28px;
+  animation: fadeIn 0.25s ease;
+}
+.modal-box h2 {
+  font-family: var(--font-serif);
+  color: var(--sage-dark);
+  margin-bottom: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+  color: var(--charcoal-light);
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background 0.15s;
+}
+.modal-close:hover { background: var(--sage-light); }
+.ref-card {
+  background: var(--sage-light);
+  border-left: 4px solid var(--sage);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+.ref-card h3 {
+  font-family: var(--font-serif);
+  color: var(--sage-dark);
+  font-size: 1rem;
+  margin-bottom: 4px;
+}
+.ref-card p {
+  font-size: 0.88rem;
+  color: var(--charcoal);
+  margin-bottom: 4px;
+}
+.ref-card .ref-signal {
+  font-size: 0.82rem;
+  color: var(--charcoal-light);
+  font-style: italic;
+}
+
 .fade-in { animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -493,6 +561,7 @@ body {
     <div class="flex-center">
       <button class="btn btn-primary" onclick="showScreen('screen-setup')">Start a Session</button>
       <button class="btn btn-secondary" onclick="showPastReport()">View Past Report</button>
+      <button class="btn btn-gold btn-small" onclick="openQuickRef()">📖 Quick Reference</button>
     </div>
   </div>
   <div class="card" id="streak-card" style="display:none;">
@@ -599,6 +668,41 @@ body {
   </div>
 </div>
 
+</div>
+
+<!-- Quick Reference Modal -->
+<div class="modal-overlay" id="quick-ref-modal" onclick="closeQuickRef(event)">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <h2>
+      <span>📖 Present Estates — Quick Reference</span>
+      <button class="modal-close" onclick="closeQuickRef()" aria-label="Close">&times;</button>
+    </h2>
+    <div class="ref-card">
+      <h3>Fee Simple Absolute</h3>
+      <p>The largest estate — full ownership with no conditions or limitations. Lasts forever.</p>
+      <div class="ref-signal">Signal words: "To A" or "To A and her heirs"</div>
+    </div>
+    <div class="ref-card">
+      <h3>Fee Simple Determinable</h3>
+      <p>A defeasible fee that ends automatically when a stated event occurs. Grantor holds a possibility of reverter.</p>
+      <div class="ref-signal">Signal words: "so long as," "while," "during," "until"</div>
+    </div>
+    <div class="ref-card">
+      <h3>Fee Simple Subject to Condition Subsequent</h3>
+      <p>A defeasible fee where the grantor may elect to reclaim the estate if a condition is breached. Does not end automatically.</p>
+      <div class="ref-signal">Signal words: "but if … O reserves a right of entry," "provided that … O may reenter"</div>
+    </div>
+    <div class="ref-card">
+      <h3>Fee Simple Subject to Executory Limitation</h3>
+      <p>A defeasible fee that transfers to a third party (not the grantor) upon a stated condition. The third party holds an executory interest.</p>
+      <div class="ref-signal">Signal words: "but if … to B," "so long as … then to B"</div>
+    </div>
+    <div class="ref-card" style="margin-bottom:0;">
+      <h3>Life Estate</h3>
+      <p>An estate measured by the lifetime of the holder (or another person). Followed by a remainder or reversion.</p>
+      <div class="ref-signal">Signal words: "for life," "for the life of"</div>
+    </div>
+  </div>
 </div>
 
 <script src="app.js"></script>

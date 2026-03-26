@@ -1695,6 +1695,19 @@ function formatTime(ms) {
 }
 
 // ============================================================
+// QUICK REFERENCE MODAL
+// ============================================================
+function openQuickRef() {
+  document.getElementById('quick-ref-modal').classList.add('open');
+}
+
+function closeQuickRef(e) {
+  if (!e || e.target === e.currentTarget) {
+    document.getElementById('quick-ref-modal').classList.remove('open');
+  }
+}
+
+// ============================================================
 // INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', () => {
